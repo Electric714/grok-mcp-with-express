@@ -1,1 +1,1 @@
-[Full corrected code here]
+[Full clean fixed code with clientId: grok-expert-custom-mcp-test4 and manual auth check]
