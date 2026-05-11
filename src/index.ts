@@ -29,9 +29,9 @@ const transport = new StreamableHTTPServerTransport({
   sessionIdGenerator: undefined, // set to undefined for stateless servers
 });
 
-// MCP endpoint
-app.post("/mcp", async (req: Request, res: Response) => {
-  console.log("Received MCP request:", req.body);
+// MCP endpoint - NOW AT ROOT for Grok connector compatibility
+app.post("/", async (req: Request, res: Response) => {
+  console.log("Received MCP request at root:", req.body);
   try {
     await transport.handleRequest(req, res, req.body);
   } catch (error) {
@@ -49,9 +49,9 @@ app.post("/mcp", async (req: Request, res: Response) => {
   }
 });
 
-// Method not allowed handlers
+// Method not allowed handlers for root
 const methodNotAllowed = (req: Request, res: Response) => {
-  console.log(`Received ${req.method} MCP request`);
+  console.log(`Received ${req.method} MCP request at root`);
   res.status(405).json({
     jsonrpc: "2.0",
     error: {
@@ -62,6 +62,36 @@ const methodNotAllowed = (req: Request, res: Response) => {
   });
 };
 
+app.get("/", (req: Request, res: Response) => {
+  res.json({
+    status: "ok",
+    message: "MCP server ready - Protocol mounted at root / for Grok connector",
+    tools_available: true
+  });
+});
+
+app.delete("/", methodNotAllowed);
+
+// Legacy /mcp routes for backward compatibility
+app.post("/mcp", async (req: Request, res: Response) => {
+  console.log("Received legacy MCP request:", req.body);
+  try {
+    await transport.handleRequest(req, res, req.body);
+  } catch (error) {
+    console.error("Error handling MCP request:", error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: "Internal server error",
+        },
+        id: null,
+      });
+    }
+  }
+});
+
 app.get("/mcp", methodNotAllowed);
 app.delete("/mcp", methodNotAllowed);
 
@@ -71,7 +101,7 @@ const { server } = createServer();
 const setupServer = async () => {
   try {
     await server.connect(transport);
-    console.log("Server connected successfully");
+    console.log("Server connected successfully to root endpoint");
   } catch (error) {
     console.error("Failed to set up the server:", error);
     throw error;
@@ -82,7 +112,7 @@ const setupServer = async () => {
 setupServer()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`MCP Streamable HTTP Server listening on port ${PORT}`);
+      console.log(`MCP Streamable HTTP Server listening on port ${PORT} - MCP now at /`);
     });
   })
   .catch((error) => {
