@@ -232,5 +232,97 @@ export const createServer = () => {
     }
   );
 
+  // === NEW SIMPLE TOOLS ===
+  // 1. Hello / test tool
+  server.tool(
+    "hello",
+    "Simple greeting tool to test MCP connection",
+    {
+      name: z.string().optional().describe("Name to greet (optional)"),
+    },
+    async ({ name }) => {
+      const greeting = name 
+        ? `Hello, ${name}! Nice to meet you.` 
+        : "Hello! MCP server is working correctly.";
+      return {
+        content: [{ type: "text", text: greeting }],
+      };
+    }
+  );
+
+  // 2. Current time
+  server.tool(
+    "get_current_time",
+    "Get the current server date and time",
+    {},
+    async () => {
+      const now = new Date();
+      const timeString = now.toISOString();
+      const localTime = now.toLocaleString();
+      return {
+        content: [{
+          type: "text",
+          text: `Current UTC time: ${timeString}\nLocal time: ${localTime}`
+        }],
+      };
+    }
+  );
+
+  // 3. Calculator
+  server.tool(
+    "calculate",
+    "Perform basic arithmetic calculations",
+    {
+      operation: z.enum(["add", "subtract", "multiply", "divide"]).describe("Operation to perform"),
+      a: z.number().describe("First number"),
+      b: z.number().describe("Second number"),
+    },
+    async ({ operation, a, b }) => {
+      let result: number;
+      switch (operation) {
+        case "add":
+          result = a + b;
+          break;
+        case "subtract":
+          result = a - b;
+          break;
+        case "multiply":
+          result = a * b;
+          break;
+        case "divide":
+          if (b === 0) return { content: [{ type: "text", text: "Error: Division by zero" }] };
+          result = a / b;
+          break;
+        default:
+          result = 0;
+      }
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Result of ${a} ${operation} ${b} = ${result}` 
+        }],
+      };
+    }
+  );
+
+  // 4. Random number generator
+  server.tool(
+    "random_number",
+    "Generate a random number between min and max",
+    {
+      min: z.number().default(1).describe("Minimum value (default: 1)"),
+      max: z.number().default(100).describe("Maximum value (default: 100)"),
+    },
+    async ({ min, max }) => {
+      const random = Math.floor(Math.random() * (max - min + 1)) + min;
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Random number between ${min} and ${max}: ${random}` 
+        }],
+      };
+    }
+  );
+
   return { server };
 };
