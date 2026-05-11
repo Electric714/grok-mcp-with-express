@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import path from "path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -8,8 +8,12 @@ import { createServer } from "./create-server.js";
 // Environment setup
 dotenv.config();
 const PORT = process.env.PORT || 3000;
+const MCP_AUTH_SECRET = process.env.MCP_AUTH_SECRET;
 
-// Initialize Express app
+if (!MCP_AUTH_SECRET) {
+  console.warn("⚠️ MCP_AUTH_SECRET is not set. Authentication is disabled.");
+}
+
 const app = express();
 
 // Middleware setup
@@ -24,13 +28,47 @@ app.use(
 );
 app.options("*", cors());
 
-// Initialize transport
-const transport = new StreamableHTTPServerTransport({
-  sessionIdGenerator: undefined, // set to undefined for stateless servers
+// === MCP AUTH MIDDLEWARE ===
+const authenticateMcp = (req: Request, res: Response, next: NextFunction) => {
+  if (!MCP_AUTH_SECRET) {
+    return next(); // No auth if secret not configured
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.setHeader('WWW-Authenticate', `Bearer realm="mcp", resource_metadata="/well-known/oauth-protected-resource"`);
+    return res.status(401).json({ error: "Unauthorized - Missing or invalid Bearer token" });
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (token !== MCP_AUTH_SECRET) {
+    res.setHeader('WWW-Authenticate', `Bearer realm="mcp", resource_metadata="/well-known/oauth-protected-resource", error="invalid_token"`);
+    return res.status(401).json({ error: "Unauthorized - Invalid token" });
+  }
+
+  next();
+};
+
+// Protected Resource Metadata (required for MCP OAuth discovery)
+app.get('/.well-known/oauth-protected-resource', (req: Request, res: Response) => {
+  const baseUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || req.headers.host}`;
+  
+  res.json({
+    resource: `${baseUrl}/mcp`,
+    resource_name: "Weather MCP Server",
+    authorization_servers: [baseUrl],
+    bearer_methods_supported: ["header"],
+    scopes_supported: ["mcp:tools", "mcp:read", "mcp:write"],
+  });
 });
 
-// MCP endpoint
-app.post("/mcp", async (req: Request, res: Response) => {
+// Initialize transport
+const transport = new StreamableHTTPServerTransport({
+  sessionIdGenerator: undefined,
+});
+
+// MCP endpoint with auth
+app.post("/mcp", authenticateMcp, async (req: Request, res: Response) => {
   console.log("Received MCP request:", req.body);
   try {
     await transport.handleRequest(req, res, req.body);
@@ -62,8 +100,8 @@ const methodNotAllowed = (req: Request, res: Response) => {
   });
 };
 
-app.get("/mcp", methodNotAllowed);
-app.delete("/mcp", methodNotAllowed);
+app.get("/mcp", authenticateMcp, methodNotAllowed);
+app.delete("/mcp", authenticateMcp, methodNotAllowed);
 
 const { server } = createServer();
 
@@ -82,7 +120,7 @@ const setupServer = async () => {
 setupServer()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`MCP Streamable HTTP Server listening on port ${PORT}`);
+      console.log(`✅ MCP Streamable HTTP Server with OAuth listening on port ${PORT}`);
     });
   })
   .catch((error) => {
