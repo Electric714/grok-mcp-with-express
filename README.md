@@ -1,13 +1,33 @@
 # Grok MCP with Express
 
-This is a Model Context Protocol (MCP) server built with Express.js for integration with Grok.
+Model Context Protocol (MCP) server using Express + @modelcontextprotocol/sdk (Streamable HTTP). Ready for Grok (xAI).
 
-## Current Tools
-- `get-alerts`: Get weather alerts for a US state
-- `get-forecast`: Get weather forecast for coordinates
+## Available Tools
+- get-forecast (lat, lon)
+- get-alerts (state code)
+- hello (name optional)
+- get_current_time
+- calculate (operation, a, b)
+- random_number (min, max)
 
-## How to add more tools
-Edit `src/create-server.ts` and register new `server.tool()` calls.
+## Endpoint
+POST https://grok-mcp-with-express.vercel.app/   (primary MCP endpoint)
 
-Deployed at: https://grok-mcp-with-express.vercel.app
+## Connect to Grok
+1. Go to https://grok.com/connectors
+2. New Custom Connector
+3. Name: Weather MCP
+4. Server URL: https://grok-mcp-with-express.vercel.app/
+5. Grok will auto-discover all tools after handshake.
 
+Test: Ask Grok for forecast in your city or use the other tools.
+
+## Local
+pnpm install && pnpm run dev
+
+## Deploy
+Vercel auto-builds on push. Live URL above.
+
+Add tools in src/create-server.ts
+
+Fixed: Vercel build/routing + serverless support + docs for full Grok compatibility.
