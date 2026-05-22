@@ -108,17 +108,22 @@ const setupServer = async () => {
   }
 };
 
-// Start server
-setupServer()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`MCP Streamable HTTP Server listening on port ${PORT} - MCP now at /`);
+// Start server (local dev only - Vercel uses export below)
+if (!process.env.VERCEL) {
+  setupServer()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`MCP Streamable HTTP Server listening on port ${PORT} - MCP now at /`);
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to start server:", error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  });
+} else {
+  // Initialize immediately for serverless cold starts
+  setupServer().catch(console.error);
+}
 
 // Handle server shutdown
 process.on("SIGINT", async () => {
@@ -138,3 +143,6 @@ process.on("SIGINT", async () => {
   }
   process.exit(0);
 });
+
+// Export the Express app for Vercel serverless deployment
+export default app;
