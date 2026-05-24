@@ -29,6 +29,9 @@ const transport = new StreamableHTTPServerTransport({
 
 // MCP endpoint - NOW AT ROOT for Grok connector compatibility
 app.post("/", async (req: Request, res: Response) => {
+  // Wait for server to be fully ready before handling any request
+  await serverReadyPromise;
+
   console.log("Received MCP request at root:", req.body);
   try {
     await transport.handleRequest(req, res, req.body);
@@ -72,6 +75,7 @@ app.delete("/", methodNotAllowed);
 
 // Legacy /mcp routes for backward compatibility
 app.post("/mcp", async (req: Request, res: Response) => {
+  await serverReadyPromise;
   console.log("Received legacy MCP request:", req.body);
   try {
     await transport.handleRequest(req, res, req.body);
@@ -95,23 +99,25 @@ app.delete("/mcp", methodNotAllowed);
 
 const { server } = createServer();
 
-// Server setup - improved for serverless
+// Server setup with proper promise-based readiness for serverless
 let serverReady = false;
-const setupServer = async () => {
-  if (serverReady) return;
+let serverReadyPromise: Promise<void>;
+
+serverReadyPromise = new Promise(async (resolve, reject) => {
   try {
     await server.connect(transport);
     serverReady = true;
     console.log("Server connected successfully to root endpoint");
+    resolve();
   } catch (error) {
     console.error("Failed to set up the server:", error);
-    throw error;
+    reject(error);
   }
-};
+});
 
 // Start server (local dev only - Vercel uses export below)
 if (!process.env.VERCEL) {
-  setupServer()
+  serverReadyPromise
     .then(() => {
       app.listen(PORT, () => {
         console.log(`MCP Streamable HTTP Server listening on port ${PORT} - MCP now at /`);
@@ -121,9 +127,6 @@ if (!process.env.VERCEL) {
       console.error("Failed to start server:", error);
       process.exit(1);
     });
-} else {
-  // Initialize immediately for serverless cold starts
-  setupServer().catch(console.error);
 }
 
 // Handle server shutdown
