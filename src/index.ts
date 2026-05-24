@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import path from "path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./create-server.js";
 
@@ -14,7 +13,6 @@ const app = express();
 
 // Middleware setup
 app.use(express.json());
-app.use(express.static(path.join(process.cwd(), "public")));
 app.use(
   cors({
     origin: true,
