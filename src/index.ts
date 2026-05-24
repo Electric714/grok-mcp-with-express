@@ -95,10 +95,13 @@ app.delete("/mcp", methodNotAllowed);
 
 const { server } = createServer();
 
-// Server setup
+// Server setup - improved for serverless
+let serverReady = false;
 const setupServer = async () => {
+  if (serverReady) return;
   try {
     await server.connect(transport);
+    serverReady = true;
     console.log("Server connected successfully to root endpoint");
   } catch (error) {
     console.error("Failed to set up the server:", error);

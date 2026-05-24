@@ -4,21 +4,31 @@ import { z } from "zod";
 const NWS_API_BASE = "https://api.weather.gov";
 const USER_AGENT = "weather-app/1.0";
 
-// Helper function for making NWS API requests
+// Helper function for making NWS API requests with timeout
 async function makeNWSRequest<T>(url: string): Promise<T | null> {
   const headers = {
     "User-Agent": USER_AGENT,
     Accept: "application/geo+json",
   };
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
   try {
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, { headers, signal: controller.signal });
+    clearTimeout(timeout);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return (await response.json()) as T;
-  } catch (error) {
-    console.error("Error making NWS request:", error);
+  } catch (error: any) {
+    clearTimeout(timeout);
+    if (error.name === 'AbortError') {
+      console.error("NWS API request timed out");
+    } else {
+      console.error("Error making NWS request:", error);
+    }
     return null;
   }
 }
