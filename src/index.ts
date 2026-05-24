@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import express, { Request, Response } from "express";
+import express, { Request, Response, Application } from "express";
 import cors from "cors";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./create-server.js";
@@ -9,7 +9,7 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express app
-const app = express();
+const app: Application = express();
 
 // Middleware setup
 app.use(express.json());
