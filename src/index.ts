@@ -102,7 +102,7 @@ const { server } = createServer();
 let serverReady = false;
 let serverReadyPromise: any;
 
-serverReadyPromise = new Promise(async (resolve, reject) => {
+serverReadyPromise = new Promise<void>(async (resolve, reject) => {
   try {
     await server.connect(transport);
     serverReady = true;
@@ -122,7 +122,7 @@ if (!process.env.VERCEL) {
         console.log(`MCP Streamable HTTP Server listening on port ${PORT} - MCP now at /`);
       });
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error("Failed to start server:", error);
       process.exit(1);
     });
