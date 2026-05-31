@@ -28,7 +28,7 @@ const transport = new StreamableHTTPServerTransport({
 });
 
 // MCP endpoint - NOW AT ROOT for Grok connector compatibility
-app.post("/", async (req, res) => {
+app.post("/", async (req: any, res: any) => {
   await serverReadyPromise;
 
   console.log("Received MCP request at root:", req.body);
@@ -50,7 +50,7 @@ app.post("/", async (req, res) => {
 });
 
 // Method not allowed handlers for root
-const methodNotAllowed = (req, res) => {
+const methodNotAllowed = (req: any, res: any) => {
   console.log(`Received ${req.method} MCP request at root`);
   res.status(405).json({
     jsonrpc: "2.0",
@@ -62,7 +62,7 @@ const methodNotAllowed = (req, res) => {
   });
 };
 
-app.get("/", (req, res) => {
+app.get("/", (req: any, res: any) => {
   res.json({
     status: "ok",
     message: "MCP server ready - Protocol mounted at root / for Grok connector",
@@ -73,7 +73,7 @@ app.get("/", (req, res) => {
 app.delete("/", methodNotAllowed);
 
 // Legacy /mcp routes for backward compatibility
-app.post("/mcp", async (req, res) => {
+app.post("/mcp", async (req: any, res: any) => {
   await serverReadyPromise;
   console.log("Received legacy MCP request:", req.body);
   try {
