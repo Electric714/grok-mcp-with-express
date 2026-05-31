@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import express, { Request, Response, Application } from "express";
+import express from "express";
 import cors from "cors";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./create-server.js";
@@ -9,7 +9,7 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express app
-const app = express() as Application;
+const app = express();
 
 // Middleware setup
 app.use(express.json());
@@ -28,8 +28,7 @@ const transport = new StreamableHTTPServerTransport({
 });
 
 // MCP endpoint - NOW AT ROOT for Grok connector compatibility
-app.post("/", async (req: Request, res: Response) => {
-  // Wait for server to be fully ready before handling any request
+app.post("/", async (req, res) => {
   await serverReadyPromise;
 
   console.log("Received MCP request at root:", req.body);
@@ -51,7 +50,7 @@ app.post("/", async (req: Request, res: Response) => {
 });
 
 // Method not allowed handlers for root
-const methodNotAllowed = (req: Request, res: Response) => {
+const methodNotAllowed = (req, res) => {
   console.log(`Received ${req.method} MCP request at root`);
   res.status(405).json({
     jsonrpc: "2.0",
@@ -63,7 +62,7 @@ const methodNotAllowed = (req: Request, res: Response) => {
   });
 };
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (req, res) => {
   res.json({
     status: "ok",
     message: "MCP server ready - Protocol mounted at root / for Grok connector",
@@ -74,7 +73,7 @@ app.get("/", (req: Request, res: Response) => {
 app.delete("/", methodNotAllowed);
 
 // Legacy /mcp routes for backward compatibility
-app.post("/mcp", async (req: Request, res: Response) => {
+app.post("/mcp", async (req, res) => {
   await serverReadyPromise;
   console.log("Received legacy MCP request:", req.body);
   try {
@@ -101,7 +100,7 @@ const { server } = createServer();
 
 // Server setup with proper promise-based readiness for serverless
 let serverReady = false;
-let serverReadyPromise: Promise<void>;
+let serverReadyPromise;
 
 serverReadyPromise = new Promise(async (resolve, reject) => {
   try {
