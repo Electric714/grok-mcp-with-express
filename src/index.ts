@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import express from "express";
+import express, { Application } from "express";
 import cors from "cors";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./create-server.js";
@@ -9,7 +9,7 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express app
-const app = express();
+const app: Application = express();
 
 // Middleware setup
 app.use(express.json());
@@ -100,7 +100,7 @@ const { server } = createServer();
 
 // Server setup with proper promise-based readiness for serverless
 let serverReady = false;
-let serverReadyPromise;
+let serverReadyPromise: Promise<void>;
 
 serverReadyPromise = new Promise(async (resolve, reject) => {
   try {
