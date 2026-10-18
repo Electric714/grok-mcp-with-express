@@ -18,7 +18,7 @@ function draw(){const el=$("messages");el.replaceChildren();for(const m of messa
 async function refresh(){if(!room){say("Create or join a room first.",true);return;}if(busy)return;busy=true;$("refresh").disabled=true;say("Loading…");
  try {const data=await callTool("relay_read_messages",{room,limit:30});messages=data.messages||[];draw();say(messages.length+" messages loaded.");}
  catch(e){say(e.message||String(e),true);}finally{busy=false;$("refresh").disabled=false;}}
-async function post(){if(!room){say("Create a room first.",true);return;}const text=$("draft").value.trim();if(!text){say("Enter a message.",true);return;}if(busy)return;busy=true;$("send").disabled=true;say("Posting…");
+async function post(){if(!room){say("Create a room first.",true);return;}const text=$("draft").value.trim();if(!text){say("Enter a message.",true);return;}if(busy){say("Waiting for room messages to load…");while(busy)await new Promise(resolve=>setTimeout(resolve,30));}busy=true;$("send").disabled=true;say("Posting…");
  try{await callTool("relay_post_message",{room,sender:$("sender").value,text});$("draft").value="";say("Posted.");}
  catch(e){say(e.message||String(e),true);busy=false;$("send").disabled=false;return;}busy=false;$("send").disabled=false;await refresh();}
 async function copy(text){try{await navigator.clipboard.writeText(text);say("Copied to clipboard.");}catch(e){say("Copy failed. Try a browser with clipboard permission.",true);}}
@@ -26,7 +26,7 @@ function handoff(name){if(!room){say("Create or join a room first.",true);return
  const transcript=messages.slice(-15).map(x=>x.sender+": "+x.text).join("\n\n");
  void copy("You are "+name+" collaborating with ChatGPT, Claude, Grok and me through a shared message relay.\n\nMCP server: https://chatgpt-mcp-with-express-kaleb-s-projects1.vercel.app/mcp\nRoom code: "+room+"\n\nIf this MCP server is connected, call relay_read_messages and then relay_post_message using sender '"+name+"' with your reply. Do not claim to have used tools unless you did.\n\nIf you cannot connect to the server, answer in your own conversation and I will paste your response into the relay.\n\nPlease respond to the newest message. Previous conversation:\n"+(transcript||"(empty room)"));
 }
-$("create").addEventListener("click",()=>{const bytes=crypto.getRandomValues(new Uint8Array(16));setRoom(Array.from(bytes,x=>x.toString(16).padStart(2,"0")).join(""));say("Room created. Write a message.");void refresh();});
+$("create").addEventListener("click",()=>{const bytes=crypto.getRandomValues(new Uint8Array(16));setRoom(Array.from(bytes,x=>x.toString(16).padStart(2,"0")).join(""));say("Room created. Write a message.");});
 $("join").addEventListener("click",()=>{try{setRoom($("room").value);void refresh();}catch(e){say(e.message,true);}});
 $("refresh").addEventListener("click",()=>void refresh());$("send").addEventListener("click",()=>void post());
 $("invite").addEventListener("click",()=>room?void copy(location.origin+"/relay#room="+room):say("Create a room first.",true));
