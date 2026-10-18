@@ -6,7 +6,9 @@ import { createServer } from "./create-server.js";
 
 dotenv.config();
 
-const app = express();
+// The installed @types/express 5 package does not match the Express 4 runtime.
+// Keep the app untyped until the dependency types can be upgraded together.
+const app: any = express();
 const port = Number(process.env.PORT || 3000);
 
 app.disable("x-powered-by");
