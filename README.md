@@ -58,3 +58,31 @@ pnpm run dev
 Vercel detects the Express app exported from `src/index.ts` automatically. No rewrite rules are needed. Pushing to GitHub `main` triggers the connected Vercel production deployment.
 
 This public sample exposes only demonstration tools. Add authentication/authorization before integrating any private data or modifying external systems.
+
+
+## Interactive MCP App dashboard
+
+Call the `open_dashboard` tool from an MCP Apps-capable host to render the
+`ui://mcp-control-center/dashboard.html` widget in a sandboxed iframe.
+The tool advertises both standard `_meta.ui.resourceUri` and OpenAI
+`openai/outputTemplate` metadata. The UI resource uses
+`text/html;profile=mcp-app` and is discoverable through `resources/list`
+and `resources/read`.
+
+A standalone testing preview is available at:
+
+`https://chatgpt-mcp-with-express-kaleb-s-projects1.vercel.app/dashboard`
+
+The dashboard includes working controls for greeting, server time, random number,
+calculator, US weather alerts, and US forecast. Within an MCP Apps host it calls
+tools through the host's bridge; in the standalone preview it sends JSON-RPC
+requests directly to `/mcp`.
+
+Source: `ui/dashboard.html`, `ui/dashboard-client.js`.
+`scripts/build-dashboard.mjs` embeds a bundled MCP Apps client into
+`src/generated-dashboard.ts` during builds; no external scripts or fonts are
+required at runtime.
+
+The dashboard is a demonstration and the MCP server has no authentication.
+Do not add privileged, write-capable, or private-data tools without implementing
+proper authorization and restrictive CORS.

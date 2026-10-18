@@ -3,6 +3,7 @@ import express, { type Request, type Response } from "express";
 import cors from "cors";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./create-server.js";
+import { dashboardHtml } from "./generated-dashboard.js";
 
 dotenv.config();
 
@@ -22,6 +23,12 @@ app.use(cors({
   ],
   exposedHeaders: ["Mcp-Session-Id"]
 }));
+
+
+app.get("/dashboard", (_req: Request, res: Response) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.type("html").send(dashboardHtml);
+});
 
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({

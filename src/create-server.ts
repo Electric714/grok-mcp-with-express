@@ -1,5 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { registerAppTool, registerAppResource, RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/server";
+import { dashboardHtml } from "./generated-dashboard.js";
 
 const NWS_API_BASE = "https://api.weather.gov";
 const USER_AGENT = "weather-app/1.0";
@@ -84,7 +86,7 @@ interface ForecastResponse {
 export const createServer = () => {
   // Create server instance
   const server = new McpServer({
-    name: "weather",
+    name: "chatgpt-mcp-control-center",
     version: "1.0.0",
   });
 
@@ -332,6 +334,48 @@ export const createServer = () => {
         }],
       };
     }
+  );
+
+
+  // MCP Apps: a model-facing launcher and a linked interactive HTML resource.
+  const dashboardUri = "ui://mcp-control-center/dashboard.html";
+  registerAppTool(
+    server,
+    "open_dashboard",
+    {
+      title: "Open MCP Control Center",
+      description: "Display an interactive dashboard for the MCP tools (calculator, greeting, time and weather).",
+      inputSchema: {},
+      _meta: {
+        ui: { resourceUri: dashboardUri },
+        "openai/outputTemplate": dashboardUri,
+        "openai/widgetAccessible": true,
+      },
+    },
+    async () => ({
+      content: [{ type: "text", text: "MCP Control Center is available with calculator, time, greeting, random number and US weather controls." }],
+      structuredContent: { dashboard: "ready", tools: 6 },
+    }),
+  );
+
+  registerAppResource(
+    server,
+    "MCP Control Center",
+    dashboardUri,
+    { mimeType: RESOURCE_MIME_TYPE, description: "Interactive MCP tool dashboard" },
+    async () => ({
+      contents: [{
+        uri: dashboardUri,
+        mimeType: RESOURCE_MIME_TYPE,
+        text: dashboardHtml,
+        _meta: {
+          ui: { csp: { connectDomains: [], resourceDomains: [] } },
+          "openai/widgetDescription": "Interactive MCP tools dashboard",
+          "openai/widgetPrefersBorder": true,
+          "openai/ui": { availableDisplayModes: ["inline", "fullscreen"] },
+        },
+      }],
+    }),
   );
 
   return { server };

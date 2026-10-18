@@ -1,18 +1,20 @@
 {
   "name": "express-mcp-server",
   "version": "1.0.0",
-  "description": "Express MCP Server with Streamable HTTP Transport",
+  "description": "Express MCP Server with interactive MCP Apps control center",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo Error: no test specified && exit 1",
-    "build": "tsc && shx chmod +x build/*.js",
+    "build": "node scripts/build-dashboard.mjs && tsc && shx chmod +x build/*.js",
     "watch": "tsc --watch",
     "start": "node build/index.js",
     "prepare": "pnpm run build",
     "dev": "concurrently npm run watch nodemon --watch build build/index.js"
   },
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -22,7 +24,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "node-fetch": "^3.3.2",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "@modelcontextprotocol/ext-apps": "1.7.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -31,7 +34,8 @@
     "concurrently": "^8.2.2",
     "nodemon": "^3.1.9",
     "shx": "^0.3.4",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "esbuild": "0.25.12"
   },
   "packageManager": "pnpm@10.14.0"
 }

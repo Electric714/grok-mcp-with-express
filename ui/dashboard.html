@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP Control Center</title>
+<style>
+:root{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light;--bg:#f7f9fe;--surface:#fff;--text:#152238;--muted:#65748b;--line:#dbe4f2;--accent:#3659e8;--accent-hover:#294bcf;--success:#168153;--shadow:0 8px 25px rgba(35,57,100,.07)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#101621;--surface:#1b2432;--text:#eaf0fc;--muted:#acb8ca;--line:#33445d;--accent:#8ba3ff;--accent-hover:#abbcff;--success:#67d8a6;--shadow:0 8px 25px rgba(0,0,0,.12)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-size:14px;padding:16px;line-height:1.48}
+.shell{max-width:840px;margin:0 auto}.eyebrow{color:var(--muted);font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:800}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}h1{font-size:23px;letter-spacing:-.03em;margin:3px 0 4px}p{margin:0;color:var(--muted)}.pill{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:6px 10px;border-radius:99px;font-size:12px;white-space:nowrap}.pill.ok{color:var(--success)}.dot{display:inline-block;width:7px;height:7px;background:currentColor;border-radius:50%;margin-right:5px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}.metric{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 14px;box-shadow:var(--shadow)}.metric label{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:18px;letter-spacing:-.03em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:var(--shadow)}.card.wide{grid-column:1/-1}h2{font-size:15px;margin:0 0 5px}.hint{font-size:12px;margin-bottom:13px}.inline{display:flex;flex-wrap:wrap;align-items:end;gap:8px}.field{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}.field>label{font-weight:600;font-size:11px;color:var(--muted)}input,select{width:100%;min-height:36px;border:1px solid var(--line);color:var(--text);background:var(--bg);border-radius:9px;padding:7px 9px;font:inherit}
+button{min-height:36px;border:0;background:var(--accent);color:#fff;padding:8px 12px;border-radius:9px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--line)}button:disabled{cursor:wait;opacity:.55}button:hover:not(:disabled){filter:brightness(.94)}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.result{background:var(--bg);border:1px solid var(--line);border-radius:10px;margin-top:12px;padding:12px;min-height:70px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--text)}.result[aria-busy="true"]{color:var(--muted)}.result:empty:after{content:"Run a tool to see its response here";color:var(--muted)}
+.history{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:5px}.history li{border-bottom:1px solid var(--line);padding:6px 0;color:var(--muted);font-size:12px}.history li:last-child{border:0}.footer{margin-top:12px;font-size:11px;color:var(--muted);text-align:center}
+@media(max-width:650px){body{padding:10px}.head{align-items:center}h1{font-size:20px}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.metric{padding:10px}.metric strong{font-size:14px}.grid{grid-template-columns:1fr}.inline{align-items:stretch}.inline>button{align-self:end}.card{padding:13px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="head"><div><div class="eyebrow">MCP Apps · Live tools</div><h1>Control Center</h1><p>Interactive tools connected to your Express MCP server.</p></div><div id="connection" class="pill"><span class="dot"></span>Connecting</div></header>
+  <section class="metrics" aria-label="Server information"><div class="metric"><label>Available tools</label><strong id="tool-count">7</strong></div><div class="metric"><label>Transport</label><strong id="transport">MCP</strong></div><div class="metric"><label>Last response</label><strong id="latency">—</strong></div></section>
+  <div class="grid">
+    <section class="card"><h2>Server utilities</h2><p class="hint">Confirm the connection with a real server response.</p><div class="inline"><button id="ping">Say hello</button><button id="time" class="secondary">Server time</button><button id="random" class="secondary">Random number</button></div><div id="utility-output" class="result" role="status" aria-live="polite"></div></section>
+    <section class="card"><h2>Calculator</h2><p class="hint">Use the server's arithmetic tool.</p><div class="inline"><div class="field"><label for="num-a">First number</label><input id="num-a" type="number" value="12" step="any"></div><div class="field"><label for="operation">Operation</label><select id="operation" aria-label="Operation"><option value="add">+</option><option value="subtract">−</option><option value="multiply" selected>×</option><option value="divide">÷</option></select></div><div class="field"><label for="num-b">Second number</label><input id="num-b" type="number" value="8" step="any"></div><button id="calc">Calculate</button></div><div id="calc-output" class="result" role="status" aria-live="polite"></div></section>
+    <section class="card"><h2>Weather alerts</h2><p class="hint">National Weather Service alerts by US state.</p><div class="inline"><div class="field"><label for="state">State code</label><input id="state" maxlength="2" value="FL" placeholder="FL" autocomplete="off"></div><button id="alerts">Check alerts</button></div><div id="alerts-output" class="result" role="status" aria-live="polite"></div></section>
+    <section class="card"><h2>Local forecast</h2><p class="hint">Forecasts for US latitude and longitude.</p><div class="inline"><div class="field"><label for="latitude">Latitude</label><input id="latitude" type="number" step="any" min="-90" max="90" value="28.81"></div><div class="field"><label for="longitude">Longitude</label><input id="longitude" type="number" step="any" min="-180" max="180" value="-81.88"></div><button id="forecast">Forecast</button></div><div id="forecast-output" class="result" role="status" aria-live="polite"></div></section>
+    <section class="card wide"><h2>Activity</h2><p class="hint">Most recent tool requests from this widget.</p><ul id="history" class="history" aria-live="polite"><li>No actions yet.</li></ul></section>
+  </div>
+  <div class="footer">MCP Apps · Dashboard v1 · Uses server tools; no private credentials stored in the browser.</div>
+</main>
+<!-- APP_JS -->
+</body></html>
