@@ -4,6 +4,7 @@ import cors from "cors";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./create-server.js";
 import { dashboardHtml } from "./generated-dashboard.js";
+import { relayHtml } from "./generated-relay.js";
 
 dotenv.config();
 
@@ -24,6 +25,8 @@ app.use(cors({
   exposedHeaders: ["Mcp-Session-Id"]
 }));
 
+
+app.get("/relay", (_req: Request, res: Response) => {res.setHeader("Cache-Control","no-store");res.type("html").send(relayHtml);});
 
 app.get("/dashboard", (_req: Request, res: Response) => {
   res.setHeader("Cache-Control", "no-store");

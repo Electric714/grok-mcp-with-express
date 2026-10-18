@@ -2,6 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { registerAppTool, registerAppResource, RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/server";
 import { dashboardHtml } from "./generated-dashboard.js";
+import { relayHtml } from "./generated-relay.js";
+import {readMessages,sendMessage,ROOM_CODE,SENDERS} from "./relay-store.js";
 
 const NWS_API_BASE = "https://api.weather.gov";
 const USER_AGENT = "weather-app/1.0";
@@ -377,6 +379,31 @@ export const createServer = () => {
       }],
     }),
   );
+
+
+  server.tool("relay_read_messages",
+    "Read the newest messages in a shared AI chat room. Requires the 32-character room code. Does not contact other AI models.",
+    {room:z.string().regex(ROOM_CODE),limit:z.number().int().min(1).max(30).optional()},
+    async({room,limit})=>{try{const messages=await readMessages(room,limit??30);const obj={room,messages,count:messages.length};return {structuredContent:obj,content:[{type:"text",text:JSON.stringify(obj)}]};}
+      catch(e){return {isError:true,content:[{type:"text",text:"Failed to read messages: "+(e instanceof Error?e.message:String(e))}]};}}
+  );
+  server.tool("relay_post_message",
+    "Write one message to an AI relay room after the user asks you to respond. Sender labels are self-reported, not verified.",
+    {room:z.string().regex(ROOM_CODE),sender:z.enum(SENDERS),text:z.string().min(1).max(2000)},
+    async({room,sender,text})=>{try{const message=await sendMessage(room,sender,text);return {structuredContent:{ok:true,message},content:[{type:"text",text:"Message posted: "+message.id}]};}
+      catch(e){return {isError:true,content:[{type:"text",text:"Failed to post message: "+(e instanceof Error?e.message:String(e))}]};}}
+  );
+  const relayUri="ui://mcp-control-center/relay.html";
+  registerAppTool(server,"open_ai_relay",{
+    title:"Open AI Relay",
+    description:"Display a shared manual AI discussion between ChatGPT, Grok, Claude, and a human.",
+    inputSchema:{},
+    _meta:{ui:{resourceUri:relayUri},"openai/outputTemplate":relayUri,"openai/widgetAccessible":true}
+  },async()=>({content:[{type:"text",text:"Open the AI Relay widget, create a room and hand off prompts to other models."}],structuredContent:{ready:true}}));
+  registerAppResource(server,"AI Relay",relayUri,
+    {mimeType:RESOURCE_MIME_TYPE,description:"Shared message relay and chat UI"},
+    async()=>({contents:[{uri:relayUri,mimeType:RESOURCE_MIME_TYPE,text:relayHtml,
+      _meta:{ui:{csp:{connectDomains:[],resourceDomains:[]}},"openai/widgetDescription":"AI shared message room"}}]}));
 
   return { server };
 };
